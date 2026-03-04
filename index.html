@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mochila Escolar - Dashboard</title>
+
+<style>
+:root {
+    --bg: #0e0e0e;
+    --sidebar: #141414;
+    --card: #1c1c1c;
+    --primary: #00d4aa;
+    --text: #ffffff;
+    --gray: #888;
+    --danger: #ff4d4d;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+    display: flex;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 250px;
+    background: var(--sidebar);
+    padding: 20px;
+    border-right: 1px solid #222;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar h2 {
+    color: var(--primary);
+    margin-bottom: 20px;
+}
+
+.sidebar input {
+    padding: 10px;
+    background: var(--card);
+    border: 1px solid #333;
+    color: white;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.sidebar button {
+    padding: 10px;
+    background: var(--primary);
+    border: none;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.materias-list {
+    margin-top: 20px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.materia-item {
+    padding: 10px;
+    background: var(--card);
+    margin-bottom: 8px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.materia-item:hover {
+    border: 1px solid var(--primary);
+}
+
+/* MAIN */
+.main {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+.header-main {
+    margin-bottom: 20px;
+}
+
+.card {
+    background: var(--card);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background: #111;
+    border: 1px solid #333;
+    color: white;
+    border-radius: 5px;
+}
+
+textarea {
+    resize: none;
+    height: 80px;
+}
+
+button.primary {
+    background: var(--primary);
+    border: none;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.task {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.task input {
+    width: auto;
+    margin-right: 10px;
+}
+
+.stats {
+    color: var(--gray);
+    margin-top: 10px;
+}
+
+.empty {
+    color: var(--gray);
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>🎒 Mochila</h2>
+    <input type="text" id="novaMateria" placeholder="Nova matéria">
+    <button onclick="criarMateria()">Adicionar</button>
+
+    <div class="materias-list" id="listaMaterias"></div>
+</div>
+
+<div class="main">
+    <div id="conteudoPrincipal" class="empty">
+        Selecione ou crie uma matéria.
+    </div>
+</div>
+
+<script>
+let dados = JSON.parse(localStorage.getItem("mochila")) || [];
+let materiaAtual = null;
+
+function salvar() {
+    localStorage.setItem("mochila", JSON.stringify(dados));
+}
+
+function criarMateria() {
+    const nome = document.getElementById("novaMateria").value.trim();
+    if(!nome) return alert("Digite o nome da matéria.");
+
+    dados.push({ nome, anotacoes: "", tarefas: [] });
+    document.getElementById("novaMateria").value = "";
+    salvar();
+    renderMaterias();
+}
+
+function renderMaterias() {
+    const lista = document.getElementById("listaMaterias");
+    lista.innerHTML = "";
+    dados.forEach((m, index) => {
+        lista.innerHTML += `
+            <div class="materia-item" onclick="abrirMateria(${index})">
+                ${m.nome}
+            </div>
+        `;
+    });
+}
+
+function abrirMateria(index) {
+    materiaAtual = index;
+    const materia = dados[index];
+
+    document.getElementById("conteudoPrincipal").innerHTML = `
+        <div class="header-main">
+            <h1>${materia.nome}</h1>
+        </div>
+
+        <div class="card">
+            <h3>Anotações</h3>
+            <textarea onchange="salvarAnotacoes(this.value)">${materia.anotacoes}</textarea>
+        </div>
+
+        <div class="card">
+            <h3>Tarefas</h3>
+            <input type="text" id="novaTarefa" placeholder="Nova tarefa">
+            <button class="primary" onclick="adicionarTarefa()">Adicionar Tarefa</button>
+            <div id="listaTarefas"></div>
+            <div class="stats" id="estatisticas"></div>
+        </div>
+    `;
+
+    renderTarefas();
+}
+
+function salvarAnotacoes(valor) {
+    dados[materiaAtual].anotacoes = valor;
+    salvar();
+}
+
+function adicionarTarefa() {
+    const input = document.getElementById("novaTarefa");
+    const texto = input.value.trim();
+    if(!texto) return;
+
+    dados[materiaAtual].tarefas.push({ texto, concluida: false });
+    input.value = "";
+    salvar();
+    renderTarefas();
+}
+
+function renderTarefas() {
+    const lista = document.getElementById("listaTarefas");
+    const estatisticas = document.getElementById("estatisticas");
+    const tarefas = dados[materiaAtual].tarefas;
+
+    lista.innerHTML = "";
+    let concluidas = 0;
+
+    tarefas.forEach((t, i) => {
+        if(t.concluida) concluidas++;
+        lista.innerHTML += `
+            <div class="task">
+                <input type="checkbox" ${t.concluida ? "checked" : ""} onchange="toggleTarefa(${i})">
+                ${t.texto}
+            </div>
+        `;
+    });
+
+    estatisticas.innerText = `${concluidas} de ${tarefas.length} tarefas concluídas`;
+}
+
+function toggleTarefa(i) {
+    dados[materiaAtual].tarefas[i].concluida = !dados[materiaAtual].tarefas[i].concluida;
+    salvar();
+    renderTarefas();
+}
+
+renderMaterias();
+</script>
+
+</body>
+</html>
