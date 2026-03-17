@@ -174,7 +174,7 @@ function criarMateria() {
     const nome = document.getElementById("novaMateria").value.trim();
     if(!nome) return alert("Digite o nome da matéria.");
 
-    dados.push({ nome, anotacoes: "", tarefas: [] });
+    dados.push({ nome, anotacoes: "", aulas: [] });
     document.getElementById("novaMateria").value = "";
     salvar();
     renderMaterias();
@@ -207,15 +207,15 @@ function abrirMateria(index) {
         </div>
 
         <div class="card">
-            <h3>Tarefas</h3>
+            <h3>aulas</h3>
             <input type="text" id="novaTarefa" placeholder="Nova tarefa">
             <button class="primary" onclick="adicionarTarefa()">Adicionar Tarefa</button>
-            <div id="listaTarefas"></div>
+            <div id="listaaulas"></div>
             <div class="stats" id="estatisticas"></div>
         </div>
     `;
 
-    renderTarefas();
+    renderaulas();
 }
 
 function salvarAnotacoes(valor) {
@@ -228,21 +228,21 @@ function adicionarTarefa() {
     const texto = input.value.trim();
     if(!texto) return;
 
-    dados[materiaAtual].tarefas.push({ texto, concluida: false });
+    dados[materiaAtual].aulas.push({ texto, concluida: false });
     input.value = "";
     salvar();
-    renderTarefas();
+    renderaulas();
 }
 
-function renderTarefas() {
-    const lista = document.getElementById("listaTarefas");
+function renderaulas() {
+    const lista = document.getElementById("listaaulas");
     const estatisticas = document.getElementById("estatisticas");
-    const tarefas = dados[materiaAtual].tarefas;
+    const aulas = dados[materiaAtual].aulas;
 
     lista.innerHTML = "";
     let concluidas = 0;
 
-    tarefas.forEach((t, i) => {
+    aulas.forEach((t, i) => {
         if(t.concluida) concluidas++;
         lista.innerHTML += `
             <div class="task">
@@ -252,13 +252,13 @@ function renderTarefas() {
         `;
     });
 
-    estatisticas.innerText = `${concluidas} de ${tarefas.length} tarefas concluídas`;
+    estatisticas.innerText = `${concluidas} de ${aulas.length} aulas concluídas`;
 }
 
 function toggleTarefa(i) {
-    dados[materiaAtual].tarefas[i].concluida = !dados[materiaAtual].tarefas[i].concluida;
+    dados[materiaAtual].aulas[i].concluida = !dados[materiaAtual].aulas[i].concluida;
     salvar();
-    renderTarefas();
+    renderaulas();
 }
 
 renderMaterias();
